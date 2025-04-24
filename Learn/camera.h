@@ -3,11 +3,10 @@
 #define CAMERA_H
 
 #include "rtweekend.h"
-
 #include "color.h"
 #include "hittable.h"
-
 #include <iostream>
+#include "material.h"
 
 class camera {
 public:
@@ -17,7 +16,8 @@ public:
     int    image_width = 100;  // Rendered image width in pixel count
     int    samples_per_pixel = 10;   // Count of random samples for each pixel
     int    max_depth = 10;   // Maximum number of ray bounces into scene 初始光线 → 碰撞物体 → 生成散射光线 → 递归追踪新光线 → 未碰撞 → 返回背景色
-
+    
+    double vfov = 90;  // 垂直视角（视场）
 
     void render(const hittable& world) {
         initialize();
@@ -56,7 +56,9 @@ private:
 
         // Determine viewport dimensions.
         auto focal_length = 1.0;
-        auto viewport_height = 2.0;
+        auto theta = degrees_to_radians(vfov);
+        auto h = tan(theta / 2);
+        auto viewport_height = 2 * h * focal_length;
         auto viewport_width = viewport_height * (double(image_width) / image_height);
 
         // Calculate the vectors across the horizontal and down the vertical viewport edges.
@@ -99,9 +101,12 @@ private:
         if (depth <= 0)
             return color(0, 0, 0);
 
-        if (world.hit(r, interval(0.001, infinity), rec)) {//0.001为修复阴影痤疮
-            vec3 direction = rec.normal + random_unit_vector();//反射光线最有可能在接近表面法线的方向上散射
-            return 0.5 * ray_color(ray(rec.p, direction), depth - 1, world);//漫反射球体
+        if (world.hit(r, interval(0.001, infinity), rec)) {//0.001为修复阴影痤疮,漫反射球体
+            ray scattered;
+            color attenuation;
+            if (rec.mat->scatter(r, rec, attenuation, scattered))
+                return attenuation * ray_color(scattered, depth - 1, world);
+            return color(0, 0, 0);
         }
 
         vec3 unit_direction = unit_vector(r.direction());

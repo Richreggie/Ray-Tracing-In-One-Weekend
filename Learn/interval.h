@@ -33,6 +33,7 @@ public:
 };
 
 
+
 extern interval empty;
 extern interval universe;
 #endif

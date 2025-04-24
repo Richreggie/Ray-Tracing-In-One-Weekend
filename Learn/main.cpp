@@ -15,13 +15,14 @@ int main() {
     cam.aspect_ratio = 16.0 / 9.0;
     cam.image_width = 400;
     cam.samples_per_pixel = 100;
+    cam.max_depth = 50;             // 有限反射次数
 
     cam.render(world);
 }
 
 
 
-
+//初始光线 → 碰撞物体 → 生成散射光线 → 递归追踪新光线 → 未碰撞 → 返回背景色
 
 //4.23 主函数代替相机的功能
 //#include "rtweekend.h"
